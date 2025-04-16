@@ -15,6 +15,15 @@ const cycleWork = 20; // in seconds
 const cycleRest = 10; // in seconds
 const cycleCount = 8;
 
+const startAudio = new Audio("/start.wav");
+const goAudio = new Audio("/go.wav");
+const restAudio = new Audio("/rest.wav");
+const count1Audio = new Audio("/count1.wav");
+const count2Audio = new Audio("/count2.wav");
+const count3Audio = new Audio("/count3.wav");
+const countSamples = [count1Audio, count2Audio, count3Audio];
+const doneAudio = new Audio("/done.wav");
+
 function isDeepEqual(a: unknown, b: unknown) {
   // cheap and dirty JSON stringify comparison
   // @todo use a better deep equal function
@@ -154,9 +163,11 @@ const Timer: React.FC = () => {
     if (seq.type === "preDelay") {
       if (seq.timeElapsed === 0) {
         console.log("preDelay start");
+        startAudio.play();
       }
       if (seq.timeLeft <= 3) {
         console.log("work in", seq.timeLeft);
+        countSamples[seq.timeLeft - 1].play();
       }
       return;
     }
@@ -164,10 +175,12 @@ const Timer: React.FC = () => {
     if (seq.type === "work") {
       if (seq.timeElapsed === 0) {
         console.log("work start", seq.cycleIndex);
+        goAudio.play();
       }
 
       if (seq.timeLeft <= 3) {
         console.log("rest in", seq.timeLeft);
+        countSamples[seq.timeLeft - 1].play();
       }
       return;
     }
@@ -175,16 +188,19 @@ const Timer: React.FC = () => {
     if (seq.type === "rest") {
       if (seq.timeElapsed === 0) {
         console.log("rest start", seq.cycleIndex);
+        restAudio.play();
       }
 
       if (seq.timeLeft <= 3) {
         console.log("work in", seq.timeLeft);
+        countSamples[seq.timeLeft - 1].play();
       }
       return;
     }
 
     if (seq.type === "done") {
       console.log("done");
+      doneAudio.play();
 
       setTimerState(null); // @todo this more reliably
       return;
