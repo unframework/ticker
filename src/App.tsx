@@ -61,9 +61,12 @@ const Timer: React.FC = () => {
       return;
     }
 
+    // use precise timer to uptick elapsed counter only on aligned second boundaries
+    const startMs = timerState.startMs; // local reference
     const interval = setInterval(() => {
-      setElapsedCounter((prev) => prev + 1);
-    }, 1000);
+      const elapsedSeconds = Math.floor((Date.now() - startMs) / 1000);
+      setElapsedCounter(elapsedSeconds);
+    }, 100);
 
     return () => {
       console.log("stopping");
@@ -76,7 +79,6 @@ const Timer: React.FC = () => {
       if (prev.mode === "inactive") {
         return {
           mode: "active",
-          timeElapsed: 0,
           startMs: Date.now(),
         };
       }
@@ -91,7 +93,6 @@ const Timer: React.FC = () => {
       return {
         mode: "active",
         startMs: Date.now() - prev.totalMs, // account for precise previous elapsed time
-        timeElapsed: Math.floor(prev.totalMs / 1000),
       };
     });
   }
