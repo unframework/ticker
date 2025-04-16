@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import "./App.css";
 import { DateTime } from "luxon";
@@ -12,6 +12,24 @@ const preDelay = 10; // in seconds
 const cycleWork = 20; // in seconds
 const cycleRest = 10; // in seconds
 const cycleCount = 8;
+
+function isDeepEqual(a: unknown, b: unknown) {
+  // cheap and dirty JSON stringify comparison
+  // @todo use a better deep equal function
+  const aStr = JSON.stringify(a);
+  const bStr = JSON.stringify(b);
+  return aStr === bStr;
+}
+
+// return consistent object reference if value is deep-equal
+function useStableValue<T>(value: T) {
+  const stableRef = useRef<T>(value);
+  if (!isDeepEqual(stableRef.current, value)) {
+    stableRef.current = value;
+  }
+
+  return stableRef.current;
+}
 
 const Timer: React.FC = () => {
   const [timerState, setTimerState] = useState<TimerState | null>(null);
@@ -44,7 +62,7 @@ const Timer: React.FC = () => {
     });
   }
 
-  const seq = useMemo(() => {
+  const seqRaw = useMemo(() => {
     if (!timerState) {
       return null;
     }
@@ -76,7 +94,15 @@ const Timer: React.FC = () => {
         type: "work" as const,
         cycleTime,
         cycleIndex,
+        timeElapsed: cycleElapsed,
         timeLeft: cycleWork - cycleElapsed,
+      };
+    }
+
+    if (cycleIndex === cycleCount - 1) {
+      // last cycle's rest is already done
+      return {
+        type: "done" as const,
       };
     }
 
@@ -86,9 +112,55 @@ const Timer: React.FC = () => {
       type: "rest" as const,
       cycleTime,
       cycleIndex,
+      timeElapsed: cycleRestElapsed,
       timeLeft: cycleRest - cycleRestElapsed,
     };
   }, [timerState]);
+
+  // prevent re-renders and event repeats by using a stable reference
+  const seq = useStableValue(seqRaw);
+
+  useEffect(() => {
+    if (!seq) {
+      return;
+    }
+
+    if (seq.type === "preDelay") {
+      if (seq.timeLeft <= 3) {
+        console.log("work in", seq.timeLeft);
+      }
+      return;
+    }
+
+    if (seq.type === "work") {
+      if (seq.timeElapsed === 0) {
+        console.log("work start");
+      }
+
+      if (seq.timeLeft <= 3) {
+        console.log("rest in", seq.timeLeft);
+      }
+      return;
+    }
+
+    if (seq.type === "rest") {
+      if (seq.timeElapsed === 0) {
+        console.log("rest start");
+      }
+
+      if (seq.timeLeft <= 3) {
+        console.log("work in", seq.timeLeft);
+      }
+      return;
+    }
+
+    if (seq.type === "done") {
+      console.log("done");
+
+      setTimerState(null); // @todo this more reliably
+      return;
+    }
+  }, [seq]);
 
   return (
     <div>
