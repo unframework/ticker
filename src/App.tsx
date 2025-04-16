@@ -4,12 +4,18 @@ import clsx from "clsx";
 
 import "./App.css";
 
-interface TimerState {
-  start: DateTime;
-  current: DateTime;
-  isPaused: boolean;
-  pausedTime: number; // seconds, fractional
-}
+type TimerState =
+  | {
+      mode: "inactive";
+    }
+  | {
+      mode: "active";
+      startMs: number;
+    }
+  | {
+      mode: "paused";
+      totalMs: number; // precise millis for restart
+    };
 
 const preDelay = 10; // in seconds
 const cycleWork = 20; // in seconds
@@ -44,69 +50,64 @@ function useStableValue<T>(value: T) {
 }
 
 const Timer: React.FC = () => {
-  const [timerState, setTimerState] = useState<TimerState | null>(null);
+  const [timerState, setTimerState] = useState<TimerState>({
+    mode: "inactive",
+  });
 
-  const start = timerState && !timerState.isPaused ? timerState.start : null;
+  const [elapsedCounter, setElapsedCounter] = useState(0);
+
   useEffect(() => {
-    if (!start) {
+    if (timerState.mode !== "active") {
       return;
     }
 
     const interval = setInterval(() => {
-      setTimerState(
-        (prevState) =>
-          prevState && {
-            ...prevState,
-            current: DateTime.now(),
-          },
-      );
-    }, 250);
+      setElapsedCounter((prev) => prev + 1);
+    }, 1000);
 
     return () => {
       console.log("stopping");
       clearInterval(interval);
     };
-  }, [start]);
+  }, [timerState]);
 
-  function startTimer() {
+  function toggleTimer() {
     setTimerState((prev) => {
-      if (!prev) {
+      if (prev.mode === "inactive") {
         return {
-          start: DateTime.now(),
-          current: DateTime.now(),
-          isPaused: false,
-          pausedTime: 0,
+          mode: "active",
+          timeElapsed: 0,
+          startMs: Date.now(),
         };
       }
 
-      if (prev.isPaused) {
-        const addedTime = prev.current.diff(prev.start, "seconds").seconds;
+      if (prev.mode === "active") {
         return {
-          start: DateTime.now(),
-          current: DateTime.now(),
-          isPaused: false,
-          pausedTime: prev.pausedTime + addedTime,
+          mode: "paused",
+          totalMs: Date.now() - prev.startMs,
         };
       }
 
       return {
-        ...prev,
-        isPaused: true,
+        mode: "active",
+        startMs: Date.now() - prev.totalMs, // account for precise previous elapsed time
+        timeElapsed: Math.floor(prev.totalMs / 1000),
       };
     });
   }
 
   const seqRaw = useMemo(() => {
-    if (!timerState) {
+    if (timerState.mode === "inactive") {
       return {
         type: "inactive" as const,
       };
     }
 
-    const secondsDiff = Math.floor(
-      timerState.current.diff(timerState.start, "seconds").seconds +
-        timerState.pausedTime,
-    );
+    const elapsedMs =
+      timerState.mode === "paused"
+        ? timerState.totalMs
+        : Date.now() - timerState.startMs;
+    const secondsDiff = Math.floor(elapsedMs / 1000);
 
     if (secondsDiff < preDelay) {
       return {
@@ -153,7 +154,7 @@ const Timer: React.FC = () => {
       timeElapsed: cycleRestElapsed,
       timeLeft: cycleRest - cycleRestElapsed,
     };
-  }, [timerState]);
+  }, [timerState, elapsedCounter]);
 
   // prevent re-renders and event repeats by using a stable reference
   const seq = useStableValue(seqRaw);
@@ -205,7 +206,10 @@ const Timer: React.FC = () => {
       console.log("done");
       doneAudio.play();
 
-      setTimerState(null); // @todo this more reliably
+      // @todo this more reliably
+      setTimerState({
+        mode: "inactive",
+      });
       return;
     }
   }, [seq]);
@@ -231,13 +235,13 @@ const Timer: React.FC = () => {
     <div
       className={clsx(
         "flex flex-col gap-2 h-screen w-screen fixed items-center justify-center pb-32",
-        timerState && timerState.isPaused ? "bg-gray-300" : getBgClass(),
+        timerState.mode === "paused" ? "bg-gray-300" : getBgClass(),
       )}
     >
       <div
         className={clsx(
           "text-[30vh] leading-none",
-          timerState && timerState.isPaused && "opacity-50",
+          timerState.mode === "paused" && "opacity-50",
           seq.type === "work" && "text-orange-700",
         )}
       >
@@ -257,7 +261,7 @@ const Timer: React.FC = () => {
       <div
         className={clsx(
           "text-[10vh] leading-none empty:before:content-['--']",
-          timerState && timerState.isPaused && "opacity-50",
+          timerState.mode === "paused" && "opacity-50",
           seq.type === "work" || seq.type === "rest"
             ? "text-gray-800"
             : "text-gray-500",
@@ -279,19 +283,25 @@ const Timer: React.FC = () => {
           className="btn btn-primary btn-xl"
           type="button"
           onClick={() => {
-            startTimer();
+            toggleTimer();
           }}
         >
-          {timerState === null || timerState.isPaused ? "Start" : "Pause"}
+          {timerState.mode === "inactive"
+            ? "Start"
+            : timerState.mode === "paused"
+              ? "Unpause"
+              : "Pause"}
         </button>
         <button
           className="btn btn-error btn-xl"
           type="button"
           onClick={() => {
-            setTimerState(null);
+            setTimerState({
+              mode: "inactive",
+            });
           }}
         >
-          Stop
+          Reset
         </button>
       </div>
     </div>
