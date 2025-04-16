@@ -6,7 +6,8 @@ import "./App.css";
 
 type TimerState =
   | {
-      mode: "inactive";
+      mode: "stopped";
+      isDone?: boolean;
     }
   | {
       mode: "active";
@@ -51,7 +52,7 @@ function useStableValue<T>(value: T) {
 
 const Timer: React.FC = () => {
   const [timerState, setTimerState] = useState<TimerState>({
-    mode: "inactive",
+    mode: "stopped",
   });
 
   const [elapsedCounter, setElapsedCounter] = useState(0);
@@ -76,7 +77,7 @@ const Timer: React.FC = () => {
 
   function toggleTimer() {
     setTimerState((prev) => {
-      if (prev.mode === "inactive") {
+      if (prev.mode === "stopped") {
         return {
           mode: "active",
           startMs: Date.now(),
@@ -98,9 +99,9 @@ const Timer: React.FC = () => {
   }
 
   const seqRaw = useMemo(() => {
-    if (timerState.mode === "inactive") {
+    if (timerState.mode === "stopped") {
       return {
-        type: "inactive" as const,
+        type: timerState.isDone ? ("done" as const) : ("inactive" as const),
       };
     }
 
@@ -160,6 +161,7 @@ const Timer: React.FC = () => {
   // prevent re-renders and event repeats by using a stable reference
   const seq = useStableValue(seqRaw);
 
+  // play sound effects on step transitions
   useEffect(() => {
     if (!seq) {
       return;
@@ -209,7 +211,19 @@ const Timer: React.FC = () => {
 
       // @todo this more reliably
       setTimerState({
-        mode: "inactive",
+        mode: "stopped",
+        isDone: true,
+      });
+      return;
+    }
+  }, [seq]);
+
+  // auto-stop the running timer when finished
+  useEffect(() => {
+    if (seq.type === "done") {
+      setTimerState({
+        mode: "stopped",
+        isDone: true,
       });
       return;
     }
@@ -276,18 +290,18 @@ const Timer: React.FC = () => {
           </div>
         )}
 
-        {seq.type === "done" && <div>Done!</div>}
+        {seq.type === "done" && <div>🎉🥳🎉</div>}
       </div>
 
       <div className="flex gap-2 mt-16">
         <button
-          className="btn btn-primary btn-xl"
+          className="btn btn-primary btn-xl w-64" // fixed width due to dynamic label
           type="button"
           onClick={() => {
             toggleTimer();
           }}
         >
-          {timerState.mode === "inactive"
+          {timerState.mode === "stopped"
             ? "Start"
             : timerState.mode === "paused"
               ? "Unpause"
@@ -298,7 +312,7 @@ const Timer: React.FC = () => {
           type="button"
           onClick={() => {
             setTimerState({
-              mode: "inactive",
+              mode: "stopped",
             });
           }}
         >
