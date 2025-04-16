@@ -207,9 +207,9 @@ const Timer: React.FC = () => {
         console.log("rest start", seq.cycleIndex);
         if (seq.cycleIndex === cycleCount - 2) {
           lapAudio.play();
-        } else {
-          restAudio.play();
         }
+
+        restAudio.play();
       }
 
       if (seq.timeLeft <= 3) {
