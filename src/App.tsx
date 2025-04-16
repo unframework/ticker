@@ -221,10 +221,14 @@ const Timer: React.FC = () => {
   // auto-stop the running timer when finished
   useEffect(() => {
     if (seq.type === "done") {
-      setTimerState({
-        mode: "stopped",
-        isDone: true,
-      });
+      setTimerState((prev) =>
+        prev.mode === "stopped"
+          ? prev
+          : {
+              mode: "stopped",
+              isDone: true,
+            },
+      );
       return;
     }
   }, [seq]);
