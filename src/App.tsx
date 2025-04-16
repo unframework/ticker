@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { DateTime } from "luxon";
+import clsx from "clsx";
 
 import "./App.css";
-import { DateTime } from "luxon";
 
 interface TimerState {
   start: DateTime;
@@ -97,7 +98,9 @@ const Timer: React.FC = () => {
 
   const seqRaw = useMemo(() => {
     if (!timerState) {
-      return null;
+      return {
+        type: "inactive" as const,
+      };
     }
 
     const secondsDiff = Math.floor(
@@ -207,37 +210,73 @@ const Timer: React.FC = () => {
     }
   }, [seq]);
 
+  function getBgClass() {
+    if (seq.type === "work") {
+      return "bg-yellow-100";
+    }
+
+    if (seq.type === "rest") {
+      return "bg-blue-100";
+    }
+
+    if (seq.type === "done") {
+      return "bg-green-300";
+    }
+
+    return null;
+  }
+
   return (
-    <div>
-      {seq ? (
-        <div>
-          {seq.type === "preDelay" && (
-            <div>Get ready: {seq.timeLeft} seconds</div>
-          )}
-
-          {seq.type === "work" && (
-            <div>
-              Cycle {seq.cycleIndex + 1}/{cycleCount}: work {seq.timeLeft}{" "}
-              seconds
-            </div>
-          )}
-
-          {seq.type === "rest" && (
-            <div>
-              Cycle {seq.cycleIndex + 1}/{cycleCount}: rest {seq.timeLeft}{" "}
-              seconds
-            </div>
-          )}
-
-          {seq.type === "done" && <div>Done!</div>}
-        </div>
-      ) : (
-        <div>--</div>
+    // fullscreen
+    <div
+      className={clsx(
+        "flex flex-col gap-2 h-screen w-screen fixed items-center justify-center pb-32",
+        timerState && timerState.isPaused ? "bg-gray-300" : getBgClass(),
       )}
+    >
+      <div
+        className={clsx(
+          "text-[30vh] leading-none",
+          timerState && timerState.isPaused && "opacity-50",
+          seq.type === "work" && "text-orange-700",
+        )}
+      >
+        {seq.type === "inactive" && <div>--</div>}
 
-      <div className="flex gap-2">
+        {seq.type === "preDelay" && <div>{-seq.timeLeft}</div>}
+
+        {seq.type === "work" && (
+          <div>00:{("0" + seq.timeElapsed).slice(-2)}</div>
+        )}
+
+        {seq.type === "rest" && <div>{-seq.timeLeft}</div>}
+
+        {seq.type === "done" && <div>Done!</div>}
+      </div>
+
+      <div
+        className={clsx(
+          "text-[10vh] leading-none empty:before:content-['--']",
+          timerState && timerState.isPaused && "opacity-50",
+          seq.type === "work" || seq.type === "rest"
+            ? "text-gray-800"
+            : "text-gray-500",
+        )}
+      >
+        {seq.type === "preDelay" && <div>Get ready</div>}
+
+        {(seq.type === "work" || seq.type === "rest") && (
+          <div>
+            {seq.cycleIndex + 1}/{cycleCount}
+          </div>
+        )}
+
+        {seq.type === "done" && <div>Done!</div>}
+      </div>
+
+      <div className="flex gap-2 mt-16">
         <button
-          className="btn btn-primary"
+          className="btn btn-primary btn-xl"
           type="button"
           onClick={() => {
             startTimer();
@@ -246,7 +285,7 @@ const Timer: React.FC = () => {
           {timerState === null || timerState.isPaused ? "Start" : "Pause"}
         </button>
         <button
-          className="btn btn-error"
+          className="btn btn-error btn-xl"
           type="button"
           onClick={() => {
             setTimerState(null);
