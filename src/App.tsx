@@ -6,6 +6,8 @@ import { DateTime } from "luxon";
 interface TimerState {
   start: DateTime;
   current: DateTime;
+  isPaused: boolean;
+  pausedTime: number; // seconds, fractional
 }
 
 const preDelay = 10; // in seconds
@@ -34,7 +36,7 @@ function useStableValue<T>(value: T) {
 const Timer: React.FC = () => {
   const [timerState, setTimerState] = useState<TimerState | null>(null);
 
-  const start = timerState?.start;
+  const start = timerState && !timerState.isPaused ? timerState.start : null;
   useEffect(() => {
     if (!start) {
       return;
@@ -48,17 +50,39 @@ const Timer: React.FC = () => {
             current: DateTime.now(),
           },
       );
-    }, 1000);
+    }, 250);
 
     return () => {
+      console.log("stopping");
       clearInterval(interval);
     };
   }, [start]);
 
   function startTimer() {
-    setTimerState({
-      start: DateTime.now(),
-      current: DateTime.now(),
+    setTimerState((prev) => {
+      if (!prev) {
+        return {
+          start: DateTime.now(),
+          current: DateTime.now(),
+          isPaused: false,
+          pausedTime: 0,
+        };
+      }
+
+      if (prev.isPaused) {
+        const addedTime = prev.current.diff(prev.start, "seconds").seconds;
+        return {
+          start: DateTime.now(),
+          current: DateTime.now(),
+          isPaused: false,
+          pausedTime: prev.pausedTime + addedTime,
+        };
+      }
+
+      return {
+        ...prev,
+        isPaused: true,
+      };
     });
   }
 
@@ -68,12 +92,14 @@ const Timer: React.FC = () => {
     }
 
     const secondsDiff = Math.floor(
-      timerState.current.diff(timerState.start, "seconds").seconds,
+      timerState.current.diff(timerState.start, "seconds").seconds +
+        timerState.pausedTime,
     );
 
     if (secondsDiff < preDelay) {
       return {
         type: "preDelay" as const,
+        timeElapsed: secondsDiff,
         timeLeft: preDelay - secondsDiff,
       };
     }
@@ -126,6 +152,9 @@ const Timer: React.FC = () => {
     }
 
     if (seq.type === "preDelay") {
+      if (seq.timeElapsed === 0) {
+        console.log("preDelay start");
+      }
       if (seq.timeLeft <= 3) {
         console.log("work in", seq.timeLeft);
       }
@@ -134,7 +163,7 @@ const Timer: React.FC = () => {
 
     if (seq.type === "work") {
       if (seq.timeElapsed === 0) {
-        console.log("work start");
+        console.log("work start", seq.cycleIndex);
       }
 
       if (seq.timeLeft <= 3) {
@@ -145,7 +174,7 @@ const Timer: React.FC = () => {
 
     if (seq.type === "rest") {
       if (seq.timeElapsed === 0) {
-        console.log("rest start");
+        console.log("rest start", seq.cycleIndex);
       }
 
       if (seq.timeLeft <= 3) {
@@ -198,7 +227,7 @@ const Timer: React.FC = () => {
             startTimer();
           }}
         >
-          Start
+          {timerState === null || timerState.isPaused ? "Start" : "Pause"}
         </button>
         <button
           className="btn btn-error"
