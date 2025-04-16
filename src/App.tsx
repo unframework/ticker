@@ -23,7 +23,12 @@ const cycleWork = 20; // in seconds
 const cycleRest = 10; // in seconds
 const cycleCount = 8;
 
+const preRaceAudio = new Audio("/pre-race.wav");
 const startAudio = new Audio("/start.wav");
+const lapAudio = new Audio("/lap.wav");
+const finishLineAudio = new Audio("/finish-line.wav");
+const countdownAAudio = new Audio("/countdownA.wav");
+const countdownBAudio = new Audio("/countdownB.wav");
 const goAudio = new Audio("/go.wav");
 const restAudio = new Audio("/rest.wav");
 const count1Audio = new Audio("/count1.wav");
@@ -170,11 +175,11 @@ const Timer: React.FC = () => {
     if (seq.type === "preDelay") {
       if (seq.timeElapsed === 0) {
         console.log("preDelay start");
-        startAudio.play();
+        preRaceAudio.play();
       }
       if (seq.timeLeft <= 3) {
         console.log("work in", seq.timeLeft);
-        countSamples[seq.timeLeft - 1].play();
+        countdownAAudio.play();
       }
       return;
     }
@@ -182,7 +187,12 @@ const Timer: React.FC = () => {
     if (seq.type === "work") {
       if (seq.timeElapsed === 0) {
         console.log("work start", seq.cycleIndex);
-        goAudio.play();
+        if (seq.cycleIndex === 0) {
+          countdownBAudio.play();
+          startAudio.play();
+        } else {
+          goAudio.play();
+        }
       }
 
       if (seq.timeLeft <= 3) {
@@ -195,7 +205,11 @@ const Timer: React.FC = () => {
     if (seq.type === "rest") {
       if (seq.timeElapsed === 0) {
         console.log("rest start", seq.cycleIndex);
-        restAudio.play();
+        if (seq.cycleIndex === cycleCount - 2) {
+          lapAudio.play();
+        } else {
+          restAudio.play();
+        }
       }
 
       if (seq.timeLeft <= 3) {
@@ -207,6 +221,7 @@ const Timer: React.FC = () => {
 
     if (seq.type === "done") {
       console.log("done");
+      finishLineAudio.play();
       doneAudio.play();
 
       // @todo this more reliably
