@@ -26,6 +26,7 @@ const samples = {
   preRace: new Audio("/pre-race.wav"),
   start: new Audio("/start.wav"),
   lap: new Audio("/lap.wav"),
+  chords: new Audio("/chords.wav"),
   finishLine: new Audio("/finish-line.wav"),
   countdownA: new Audio("/countdownA.wav"),
   countdownB: new Audio("/countdownB.wav"),
@@ -211,7 +212,7 @@ const Timer: React.FC = () => {
       if (seq.timeElapsed === 0) {
         console.log("rest start", seq.cycleIndex);
         if (seq.cycleIndex === cycleCount - 2) {
-          samples.lap.play();
+          samples.chords.play();
         }
 
         samples.rest.play();
