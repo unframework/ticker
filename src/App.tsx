@@ -23,19 +23,25 @@ const cycleWork = 20; // in seconds
 const cycleRest = 10; // in seconds
 const cycleCount = 8;
 
-const preRaceAudio = new Audio("/pre-race.wav");
-const startAudio = new Audio("/start.wav");
-const lapAudio = new Audio("/lap.wav");
-const finishLineAudio = new Audio("/finish-line.wav");
-const countdownAAudio = new Audio("/countdownA.wav");
-const countdownBAudio = new Audio("/countdownB.wav");
-const goAudio = new Audio("/go.wav");
-const restAudio = new Audio("/rest.wav");
-const count1Audio = new Audio("/count1.wav");
-const count2Audio = new Audio("/count2.wav");
-const count3Audio = new Audio("/count3.wav");
-const countSamples = [count1Audio, count2Audio, count3Audio];
-const doneAudio = new Audio("/done.wav");
+const samples = {
+  preRace: new Audio("/pre-race.wav"),
+  start: new Audio("/start.wav"),
+  lap: new Audio("/lap.wav"),
+  finishLine: new Audio("/finish-line.wav"),
+  countdownA: new Audio("/countdownA.wav"),
+  countdownB: new Audio("/countdownB.wav"),
+  go: new Audio("/go.wav"),
+  rest: new Audio("/rest.wav"),
+  count1: new Audio("/count1.wav"),
+  count2: new Audio("/count2.wav"),
+  count3: new Audio("/count3.wav"),
+  done: new Audio("/done.wav"),
+};
+const countSamples = [samples.count1, samples.count2, samples.count3];
+
+for (const key in samples) {
+  samples[key as keyof typeof samples].preload = "auto";
+}
 
 function isDeepEqual(a: unknown, b: unknown) {
   // cheap and dirty JSON stringify comparison
@@ -175,11 +181,11 @@ const Timer: React.FC = () => {
     if (seq.type === "preDelay") {
       if (seq.timeElapsed === 0) {
         console.log("preDelay start");
-        preRaceAudio.play();
+        samples.preRace.play();
       }
       if (seq.timeLeft <= 3) {
         console.log("work in", seq.timeLeft);
-        countdownAAudio.play();
+        samples.countdownA.play();
       }
       return;
     }
@@ -188,10 +194,10 @@ const Timer: React.FC = () => {
       if (seq.timeElapsed === 0) {
         console.log("work start", seq.cycleIndex);
         if (seq.cycleIndex === 0) {
-          countdownBAudio.play();
-          startAudio.play();
+          samples.countdownB.play();
+          samples.start.play();
         } else {
-          goAudio.play();
+          samples.go.play();
         }
       }
 
@@ -206,10 +212,10 @@ const Timer: React.FC = () => {
       if (seq.timeElapsed === 0) {
         console.log("rest start", seq.cycleIndex);
         if (seq.cycleIndex === cycleCount - 2) {
-          lapAudio.play();
+          samples.lap.play();
         }
 
-        restAudio.play();
+        samples.rest.play();
       }
 
       if (seq.timeLeft <= 3) {
@@ -221,8 +227,8 @@ const Timer: React.FC = () => {
 
     if (seq.type === "done") {
       console.log("done");
-      finishLineAudio.play();
-      doneAudio.play();
+      samples.finishLine.play();
+      samples.done.play();
 
       // @todo this more reliably
       setTimerState({
