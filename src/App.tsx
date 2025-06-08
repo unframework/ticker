@@ -3,6 +3,8 @@ import clsx from "clsx";
 
 import "./App.css";
 
+import { VideoPlayer } from "./videoPlayer";
+
 type TimerState =
   | {
       mode: "stopped";
@@ -343,6 +345,10 @@ const Timer: React.FC = () => {
         >
           Reset
         </button>
+      </div>
+
+      <div className="flex-none mt-2">
+        <VideoPlayer />
       </div>
     </div>
   );
