@@ -22,6 +22,10 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [playerReady, setPlayerReady] = useState(false);
   const [videoReady, setVideoReady] = useState(false);
 
+  // Prevent re-triggering effect
+  const videoStartRef = useRef(videoStart);
+  videoStartRef.current = videoStart;
+
   useEffect(() => {
     // Create sacrificial div that gets replaced by this player instance
     // (this prevents React errors when unmounting)
@@ -55,20 +59,25 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     console.log("cueing video", videoId, videoStart);
     setVideoReady(false);
 
+    // Kick off the process in the next tick (in case eg this render cycle
+    // results in pauseVideo calls, etc)
     const player = playerRef.current!;
-    player.setVolume(0);
-    player.loadVideoById(videoId, videoStart);
+    setTimeout(() => {
+      console.log("loading video", videoId, videoStart);
+      player.setVolume(0);
+      player.loadVideoById(videoId, videoStart);
 
-    // Wait for the video to be ready to play
-    const listener = player.on("stateChange", ({ data }) => {
-      console.log("waiting stateChange", data);
-      if (data === PlayerStates.PLAYING) {
-        console.log("video ready, pausing");
-        player.pauseVideo();
-        (player as any).off(listener);
-        setVideoReady(true);
-      }
-    });
+      // Wait for the video to be ready to play
+      const listener = player.on("stateChange", ({ data }) => {
+        console.log("waiting stateChange", data);
+        if (data === PlayerStates.PLAYING) {
+          console.log("video ready, pausing");
+          player.pauseVideo();
+          (player as any).off(listener);
+          setVideoReady(true);
+        }
+      });
+    }, 0);
   }, [playerReady, videoId, videoStart]);
 
   // Video playback
@@ -77,15 +86,18 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
       return;
     }
 
+    console.log("applying video status", playState);
+
     if (playState === "active") {
       playerRef.current?.playVideo();
     } else if (playState === "paused") {
       playerRef.current?.pauseVideo();
     } else if (playState === "stopped") {
+      // Use videoStartRef to avoid triggering this on track change
       playerRef.current?.pauseVideo();
-      playerRef.current?.seekTo(videoStart, true);
+      playerRef.current?.seekTo(videoStartRef.current, true);
     }
-  }, [playerReady, videoReady, playState, videoStart]);
+  }, [playerReady, videoReady, playState]);
 
   // Volume
   useEffect(() => {
