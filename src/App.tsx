@@ -350,7 +350,7 @@ const Timer: React.FC = () => {
       <div className="flex-none mt-2">
         <VideoPlayer
           videoId="vmFstSvFARQ"
-          videoStart={35} // in seconds
+          videoStart={34} // in seconds
           playState={timerState.mode}
           lowVolume={seq.type !== "work"}
         />

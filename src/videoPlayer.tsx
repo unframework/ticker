@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import YouTubePlayer from "youtube-player";
+import PlayerStates from "youtube-player/dist/constants/PlayerStates";
 
 export interface VideoPlayerProps {
   videoId: string;
-  videoStart?: number;
+  videoStart: number;
   playState: "active" | "paused" | "stopped";
   lowVolume?: boolean;
 }
@@ -19,6 +20,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<ReturnType<typeof YouTubePlayer> | null>(null);
   const [playerReady, setPlayerReady] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
 
   useEffect(() => {
     // Create sacrificial div that gets replaced by this player instance
@@ -49,12 +51,29 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
       return;
     }
 
-    playerRef.current?.cueVideoById(videoId, videoStart);
+    // Mute and ensure video is loaded for playback
+    console.log("cueing video", videoId, videoStart);
+    setVideoReady(false);
+
+    const player = playerRef.current!;
+    player.setVolume(0);
+    player.loadVideoById(videoId, videoStart);
+
+    // Wait for the video to be ready to play
+    const listener = player.on("stateChange", ({ data }) => {
+      console.log("waiting stateChange", data);
+      if (data === PlayerStates.PLAYING) {
+        console.log("video ready, pausing");
+        player.pauseVideo();
+        (player as any).off(listener);
+        setVideoReady(true);
+      }
+    });
   }, [playerReady, videoId, videoStart]);
 
   // Video playback
   useEffect(() => {
-    if (!playerReady) {
+    if (!playerReady || !videoReady) {
       return;
     }
 
@@ -63,13 +82,14 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     } else if (playState === "paused") {
       playerRef.current?.pauseVideo();
     } else if (playState === "stopped") {
-      playerRef.current?.stopVideo();
+      playerRef.current?.pauseVideo();
+      playerRef.current?.seekTo(videoStart, true);
     }
-  }, [playerReady, playState]);
+  }, [playerReady, videoReady, playState, videoStart]);
 
   // Volume
   useEffect(() => {
-    if (!playerReady) {
+    if (!playerReady || !videoReady) {
       return;
     }
 
@@ -78,7 +98,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     } else {
       playerRef.current?.setVolume(100);
     }
-  }, [playerReady, lowVolume]);
+  }, [playerReady, videoReady, lowVolume]);
 
   return (
     <div
