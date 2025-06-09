@@ -4,6 +4,7 @@ import clsx from "clsx";
 import "./App.css";
 
 import { VideoPlayer } from "./videoPlayer";
+import { PlaylistControls, useVideoList } from "./playlist";
 
 type TimerState =
   | {
@@ -69,6 +70,10 @@ const Timer: React.FC = () => {
   });
 
   const [elapsedCounter, setElapsedCounter] = useState(0);
+
+  const videoList = useVideoList();
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  const currentVideo = videoList[currentVideoIndex];
 
   useEffect(() => {
     if (timerState.mode !== "active") {
@@ -232,6 +237,8 @@ const Timer: React.FC = () => {
       samples.finishLine.play();
       samples.done.play();
 
+      setCurrentVideoIndex((prev) => (prev + 1) % videoList.length);
+
       // @todo this more reliably
       setTimerState({
         mode: "stopped",
@@ -282,7 +289,7 @@ const Timer: React.FC = () => {
     >
       <div
         className={clsx(
-          "text-[30vh] leading-none",
+          "text-[25vh] leading-none",
           timerState.mode === "paused" && "opacity-50",
           seq.type === "work" && "text-orange-700",
         )}
@@ -302,7 +309,7 @@ const Timer: React.FC = () => {
 
       <div
         className={clsx(
-          "text-[10vh] leading-none empty:before:content-['--']",
+          "text-[8vh] leading-none empty:before:content-['--']",
           timerState.mode === "paused" && "opacity-50",
           seq.type === "work" || seq.type === "rest"
             ? "text-gray-800"
@@ -320,7 +327,7 @@ const Timer: React.FC = () => {
         {seq.type === "done" && <div>🎉🥳🎉</div>}
       </div>
 
-      <div className="flex gap-2 mt-16">
+      <div className="flex gap-2 mt-8">
         <button
           className="btn btn-primary btn-xl w-64" // fixed width due to dynamic label
           type="button"
@@ -347,13 +354,21 @@ const Timer: React.FC = () => {
         </button>
       </div>
 
-      <div className="flex-none mt-2">
+      <div className="flex-none mt-8 flex items-stretch gap-4">
         <VideoPlayer
-          videoId="vmFstSvFARQ"
-          videoStart={34} // in seconds
+          videoId={currentVideo[0]}
+          videoStart={currentVideo[1]} // in seconds
           playState={timerState.mode}
           lowVolume={seq.type !== "work"}
         />
+
+        <div className="w-48">
+          <PlaylistControls
+            videoList={videoList}
+            index={currentVideoIndex}
+            onSelect={setCurrentVideoIndex}
+          />
+        </div>
       </div>
     </div>
   );
