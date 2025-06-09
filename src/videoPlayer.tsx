@@ -4,12 +4,15 @@ import YouTubePlayer from "youtube-player";
 
 export interface VideoPlayerProps {
   videoId: string;
+  videoStart?: number;
   playState: "active" | "paused" | "stopped";
   lowVolume?: boolean;
 }
 
+// TODO: volume bar for overall adjustments
 export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   videoId,
+  videoStart,
   playState,
   lowVolume,
 }) => {
@@ -46,8 +49,8 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
       return;
     }
 
-    playerRef.current?.cueVideoById(videoId);
-  }, [playerReady, videoId]);
+    playerRef.current?.cueVideoById(videoId, videoStart);
+  }, [playerReady, videoId, videoStart]);
 
   // Video playback
   useEffect(() => {

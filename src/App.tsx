@@ -183,7 +183,7 @@ const Timer: React.FC = () => {
     if (seq.type === "preDelay") {
       if (seq.timeElapsed === 0) {
         console.log("preDelay start");
-        samples.preRace.play();
+        // samples.preRace.play();
       }
       if (seq.timeLeft <= 3) {
         console.log("work in", seq.timeLeft);
@@ -196,7 +196,7 @@ const Timer: React.FC = () => {
       if (seq.timeElapsed === 0) {
         console.log("work start", seq.cycleIndex);
         if (seq.cycleIndex === 0) {
-          samples.countdownB.play();
+          // samples.countdownB.play();
           samples.start.play();
         } else {
           samples.go.play();
@@ -349,7 +349,8 @@ const Timer: React.FC = () => {
 
       <div className="flex-none mt-2">
         <VideoPlayer
-          videoId="dQw4w9WgXcQ"
+          videoId="vmFstSvFARQ"
+          videoStart={35} // in seconds
           playState={timerState.mode}
           lowVolume={seq.type !== "work"}
         />
