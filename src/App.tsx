@@ -348,7 +348,11 @@ const Timer: React.FC = () => {
       </div>
 
       <div className="flex-none mt-2">
-        <VideoPlayer videoId="dQw4w9WgXcQ" playState={timerState.mode} />
+        <VideoPlayer
+          videoId="dQw4w9WgXcQ"
+          playState={timerState.mode}
+          lowVolume={seq.type !== "work"}
+        />
       </div>
     </div>
   );

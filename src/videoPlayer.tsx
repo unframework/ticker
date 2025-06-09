@@ -5,11 +5,13 @@ import YouTubePlayer from "youtube-player";
 export interface VideoPlayerProps {
   videoId: string;
   playState: "active" | "paused" | "stopped";
+  lowVolume?: boolean;
 }
 
 export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   videoId,
   playState,
+  lowVolume,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<ReturnType<typeof YouTubePlayer> | null>(null);
@@ -52,6 +54,19 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
       playerRef.current?.stopVideo();
     }
   }, [playerReady, playState]);
+
+  // Volume
+  useEffect(() => {
+    if (!playerReady) {
+      return;
+    }
+
+    if (lowVolume) {
+      playerRef.current?.setVolume(20);
+    } else {
+      playerRef.current?.setVolume(100);
+    }
+  }, [playerReady, lowVolume]);
 
   return (
     <div
