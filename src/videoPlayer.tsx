@@ -18,8 +18,16 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [playerReady, setPlayerReady] = useState(false);
 
   useEffect(() => {
+    // Create sacrificial div that gets replaced by this player instance
+    // (this prevents React errors when unmounting)
+    const div = document.createElement("div");
+    containerRef.current!.appendChild(div);
+
     const timeoutId = setTimeout(() => {
-      playerRef.current = YouTubePlayer(containerRef.current!);
+      playerRef.current = YouTubePlayer(div, {
+        width: containerRef.current!.clientWidth,
+        height: containerRef.current!.clientHeight,
+      });
       setPlayerReady(true);
     }, 50);
 
@@ -27,7 +35,8 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     // and also destroy the player on unmount
     return () => {
       clearTimeout(timeoutId);
-      playerRef.current?.destroy();
+      playerRef.current?.destroy(); // Puts the sacrificial div back in place
+      div.parentElement?.removeChild(div); // Always clean up the sacrificial div
     };
   }, []);
 
@@ -75,8 +84,6 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         "w-96 h-56 flex items-center justify-center",
         "bg-gray-200 rounded-sm overflow-hidden",
       )}
-    >
-      VideoPlayer
-    </div>
+    ></div>
   );
 };
