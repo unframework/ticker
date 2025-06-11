@@ -5,6 +5,7 @@ import "./App.css";
 
 import { VideoPlayer } from "./videoPlayer";
 import { PlaylistControls, useVideoList } from "./playlist";
+import { useLocalState } from "./reactHelpers";
 
 type TimerState =
   | {
@@ -75,7 +76,7 @@ const Timer: React.FC = () => {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const currentVideo = videoList[currentVideoIndex];
 
-  const [volume, setVolume] = useState(100); // 0-100
+  const [volume, setVolume] = useLocalState("volume", "100"); // 0-100
 
   useEffect(() => {
     if (timerState.mode !== "active") {
@@ -364,7 +365,7 @@ const Timer: React.FC = () => {
           min="0"
           max="100"
           value={volume}
-          onChange={(e) => setVolume(Number(e.target.value))}
+          onChange={(e) => setVolume(e.target.value)}
         />
         <div className="text-sm font-mono w-12">{volume}%</div>
       </div>
@@ -374,7 +375,7 @@ const Timer: React.FC = () => {
           videoId={currentVideo[0]}
           videoStart={currentVideo[1]} // in seconds
           playState={timerState.mode}
-          volume={volume}
+          volume={Number(volume)}
           lowVolume={seq.type !== "work"}
         />
 
