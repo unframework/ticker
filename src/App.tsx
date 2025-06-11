@@ -5,7 +5,7 @@ import "./App.css";
 
 import { VideoPlayer } from "./videoPlayer";
 import { PlaylistControls, useVideoList } from "./playlist";
-import { useLocalState } from "./reactHelpers";
+import { useLocalState, useStableValue } from "./reactHelpers";
 
 type TimerState =
   | {
@@ -45,24 +45,6 @@ const countSamples = [samples.count1, samples.count2, samples.count3];
 
 for (const key in samples) {
   samples[key as keyof typeof samples].preload = "auto";
-}
-
-function isDeepEqual(a: unknown, b: unknown) {
-  // cheap and dirty JSON stringify comparison
-  // @todo use a better deep equal function
-  const aStr = JSON.stringify(a);
-  const bStr = JSON.stringify(b);
-  return aStr === bStr;
-}
-
-// return consistent object reference if value is deep-equal
-function useStableValue<T>(value: T) {
-  const stableRef = useRef<T>(value);
-  if (!isDeepEqual(stableRef.current, value)) {
-    stableRef.current = value;
-  }
-
-  return stableRef.current;
 }
 
 const Timer: React.FC = () => {
