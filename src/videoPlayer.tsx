@@ -116,7 +116,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     <div
       ref={containerRef}
       className={clsx(
-        "w-96 h-56 flex items-center justify-center",
+        "w-80 h-56 flex items-center justify-center",
         "bg-gray-200 rounded-sm overflow-hidden",
       )}
     ></div>

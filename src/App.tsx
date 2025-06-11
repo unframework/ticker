@@ -283,13 +283,13 @@ const Timer: React.FC = () => {
     // fullscreen
     <div
       className={clsx(
-        "flex flex-col gap-2 h-screen w-screen fixed items-center justify-center pb-32",
+        "flex flex-col h-screen w-screen fixed items-center justify-center pb-32",
         timerState.mode === "paused" ? "bg-gray-300" : getBgClass(),
       )}
     >
       <div
         className={clsx(
-          "text-[25vh] leading-none",
+          "text-[10vh] md:text-[25vh] leading-none",
           timerState.mode === "paused" && "opacity-50",
           seq.type === "work" && "text-orange-700",
         )}
@@ -309,7 +309,7 @@ const Timer: React.FC = () => {
 
       <div
         className={clsx(
-          "text-[8vh] leading-none empty:before:content-['--']",
+          "text-[6vh] md:text-[8vh] leading-none empty:before:content-['--']",
           timerState.mode === "paused" && "opacity-50",
           seq.type === "work" || seq.type === "rest"
             ? "text-gray-800"
@@ -327,7 +327,7 @@ const Timer: React.FC = () => {
         {seq.type === "done" && <div>🎉🥳🎉</div>}
       </div>
 
-      <div className="flex gap-2 mt-8">
+      <div className="flex gap-2 mt-12">
         <button
           className="btn btn-primary btn-xl w-64" // fixed width due to dynamic label
           type="button"
@@ -354,7 +354,7 @@ const Timer: React.FC = () => {
         </button>
       </div>
 
-      <div className="flex-none mt-8 flex items-stretch gap-4">
+      <div className="flex-none mt-12 flex flex-col md:flex-row items-stretch gap-4">
         <VideoPlayer
           videoId={currentVideo[0]}
           videoStart={currentVideo[1]} // in seconds
@@ -362,7 +362,7 @@ const Timer: React.FC = () => {
           lowVolume={seq.type !== "work"}
         />
 
-        <div className="w-48">
+        <div className="md:w-64 h-36 md:h-auto">
           <PlaylistControls
             videoList={videoList}
             index={currentVideoIndex}

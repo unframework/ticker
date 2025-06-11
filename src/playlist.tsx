@@ -35,7 +35,7 @@ export const PlaylistControls: React.FC<PlaylistControlsProps> = ({
   onSelect,
 }) => {
   return (
-    <div className="h-full rounded-sm overflow-auto bg-gray-100">
+    <div className="h-full rounded-sm overflow-y-scroll bg-gray-100">
       <div className="flex flex-col">
         {videoList.map(([videoId, , title], i) => (
           <button
@@ -49,9 +49,7 @@ export const PlaylistControls: React.FC<PlaylistControlsProps> = ({
             )}
             onClick={() => onSelect(i)}
           >
-            <div className="flex-1">
-              <div className="text-sm font-bold">{title}</div>
-            </div>
+            <span className="flex-1 text-left text-sm font-bold">{title}</span>
           </button>
         ))}
       </div>
