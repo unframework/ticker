@@ -7,6 +7,7 @@ export interface VideoPlayerProps {
   videoId: string;
   videoStart: number;
   playState: "active" | "paused" | "stopped";
+  volume: number;
   lowVolume?: boolean;
 }
 
@@ -15,6 +16,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   videoId,
   videoStart,
   playState,
+  volume,
   lowVolume,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -36,6 +38,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
       playerRef.current = YouTubePlayer(div, {
         width: containerRef.current!.clientWidth,
         height: containerRef.current!.clientHeight,
+        playerVars: { controls: 0 },
       });
       setPlayerReady(true);
     }, 50);
@@ -106,11 +109,11 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     }
 
     if (lowVolume) {
-      playerRef.current?.setVolume(20);
+      playerRef.current?.setVolume(Math.round(volume * 0.2));
     } else {
-      playerRef.current?.setVolume(100);
+      playerRef.current?.setVolume(volume);
     }
-  }, [playerReady, videoReady, lowVolume]);
+  }, [playerReady, videoReady, volume, lowVolume]);
 
   return (
     <div

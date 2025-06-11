@@ -75,6 +75,8 @@ const Timer: React.FC = () => {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const currentVideo = videoList[currentVideoIndex];
 
+  const [volume, setVolume] = useState(100); // 0-100
+
   useEffect(() => {
     if (timerState.mode !== "active") {
       return;
@@ -354,11 +356,25 @@ const Timer: React.FC = () => {
         </button>
       </div>
 
-      <div className="flex-none mt-12 flex flex-col md:flex-row items-stretch gap-4">
+      <div className="flex-none mt-12 flex items-center gap-4">
+        <div className="text-sm">Music</div>
+        <input
+          type="range"
+          className="range"
+          min="0"
+          max="100"
+          value={volume}
+          onChange={(e) => setVolume(Number(e.target.value))}
+        />
+        <div className="text-sm font-mono w-12">{volume}%</div>
+      </div>
+
+      <div className="flex-none mt-4 flex flex-col md:flex-row items-stretch gap-4">
         <VideoPlayer
           videoId={currentVideo[0]}
           videoStart={currentVideo[1]} // in seconds
           playState={timerState.mode}
+          volume={volume}
           lowVolume={seq.type !== "work"}
         />
 
