@@ -3,10 +3,16 @@ import clsx from "clsx";
 
 const videos: [string, number, string][] = [
   ["zb5-CXOeYj4", 0, "9-9s"],
-  ["9jTlMgM-kuY", 13, "Gonzi - Turn it up"],
-  ["y0GcRu6qSa0", 12, "Parasomnia"],
-  ["hUTGTflHTrE", 1, "Doruksen - Intoxicated"],
+  ["9jTlMgM-kuY", 23, "Gonzi - Turn it up"],
+  ["y0GcRu6qSa0", 22, "Parasomnia"],
+  ["hUTGTflHTrE", 11, "Doruksen - Intoxicated"],
   ["QRU5jpPgdfo", 0, "Mahtal - All in This"],
+  ["_GfcIprkuvw", 0, "Chemical Beats"],
+  ["yst_-HXWIm0", 41, "Leftfield - Phat Planet"],
+  ["d4rQSINk46k", 0, "Herbsmoke"],
+  ["ZguPdN1L7vg", 15, "Block Rockin' Beats"],
+  ["ltdhuNmfWuU", 65, "Ed Solo & Deekline - Bam Bam"],
+  ["gdZK482P31s", 78, "Pendulum - Hold Your Colour (Noisia Remix)"],
 ];
 
 export function useVideoList() {
