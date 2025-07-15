@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import clsx from "clsx";
 
 import "./App.css";
@@ -33,7 +33,6 @@ const samples = {
   chords: new Audio("/chords.wav"),
   finishLine: new Audio("/finish-line.wav"),
   countdownA: new Audio("/countdownA.wav"),
-  countdownB: new Audio("/countdownB.wav"),
   go: new Audio("/go.wav"),
   rest: new Audio("/rest.wav"),
   count1: new Audio("/count1.wav"),
@@ -42,6 +41,7 @@ const samples = {
   done: new Audio("/done.wav"),
 };
 const countSamples = [samples.count1, samples.count2, samples.count3];
+samples.countdownA.currentTime = 0; // try to triger load?
 
 for (const key in samples) {
   samples[key as keyof typeof samples].preload = "auto";
@@ -177,6 +177,10 @@ const Timer: React.FC = () => {
       }
       if (seq.timeLeft <= 3) {
         console.log("work in", seq.timeLeft);
+
+        // reset play position to start
+        samples.countdownA.pause();
+        samples.countdownA.currentTime = 0;
         samples.countdownA.play();
       }
       return;
