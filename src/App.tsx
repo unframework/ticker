@@ -308,8 +308,9 @@ const Timer: React.FC = () => {
         {seq.type === "preDelay" && <div>Get ready</div>}
 
         {(seq.type === "work" || seq.type === "rest") && (
+          // show next cycle number when counting down rest
           <div>
-            {seq.cycleIndex + 1}/{cycleCount}
+            {seq.cycleIndex + (seq.type === "rest" ? 2 : 1)}/{cycleCount}
           </div>
         )}
 
