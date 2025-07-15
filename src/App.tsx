@@ -173,7 +173,7 @@ const Timer: React.FC = () => {
     if (seq.type === "preDelay") {
       if (seq.timeElapsed === 0) {
         console.log("preDelay start");
-        // samples.preRace.play();
+        samples.preRace.play();
       }
       if (seq.timeLeft <= 3) {
         console.log("work in", seq.timeLeft);
@@ -360,7 +360,13 @@ const Timer: React.FC = () => {
         <VideoPlayer
           videoId={currentVideo[0]}
           videoStart={currentVideo[1]} // in seconds
-          playState={timerState.mode}
+          playState={
+            timerState.mode === "active"
+              ? seq.type === "work" || seq.type === "rest"
+                ? "active"
+                : "stopped"
+              : timerState.mode
+          }
           volume={Number(volume)}
           lowVolume={seq.type !== "work"}
         />
