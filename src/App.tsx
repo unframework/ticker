@@ -212,12 +212,18 @@ const Timer: React.FC = () => {
         }
 
         samples.rest.play();
+
+        // mid-way, switch to next video
+        if (seq.cycleIndex === 3) {
+          setCurrentVideoIndex((prev) => (prev + 1) % videoList.length);
+        }
       }
 
       if (seq.timeLeft <= 3) {
         console.log("work in", seq.timeLeft);
         countSamples[seq.timeLeft - 1].play();
       }
+
       return;
     }
 
@@ -363,7 +369,8 @@ const Timer: React.FC = () => {
           videoStart={currentVideo[1]} // in seconds
           playState={
             timerState.mode === "active"
-              ? seq.type === "work" || seq.type === "rest"
+              ? seq.type === "work" ||
+                (seq.type === "rest" && seq.cycleIndex !== 3)
                 ? "active"
                 : "stopped"
               : timerState.mode
