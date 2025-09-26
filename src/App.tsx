@@ -379,12 +379,14 @@ const Timer: React.FC = () => {
           lowVolume={seq.type !== "work"}
         />
 
-        <div className="md:w-64 h-36 md:h-auto">
-          <PlaylistControls
-            videoList={videoList}
-            index={currentVideoIndex}
-            onSelect={setCurrentVideoIndex}
-          />
+        <div className="md:w-64 h-36 md:h-full md:relative">
+          <div className="h-full md:absolute md:inset-0">
+            <PlaylistControls
+              videoList={videoList}
+              index={currentVideoIndex}
+              onSelect={setCurrentVideoIndex}
+            />
+          </div>
         </div>
       </div>
     </div>
