@@ -7,6 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `yarn dev` - Start development server with Vite
 - `yarn build` - Build application (TypeScript compilation + Vite build)
 - `yarn deploy` - Deploy to AWS CloudFront (builds first, then runs CDK deploy)
+- CDK commands are run from `cdk-infra/` directory using `yarn cdk <command>`
 
 ## Architecture Overview
 

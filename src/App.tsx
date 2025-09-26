@@ -8,10 +8,18 @@ import { PlaylistControls, useVideoList } from "./playlist";
 import { useLocalState, useStableValue } from "./reactHelpers";
 
 type TimerState =
-  | {
+  | ({
       mode: "stopped";
-      isDone?: boolean;
-    }
+    } & (
+      | {
+          isDone: true;
+          finishMs: number;
+        }
+      | {
+          isDone?: false;
+          finishMs?: undefined;
+        }
+    ))
   | {
       mode: "active";
       startMs: number;
@@ -61,21 +69,33 @@ const Timer: React.FC = () => {
   const [volume, setVolume] = useLocalState("volume", "100"); // 0-100
 
   useEffect(() => {
-    if (timerState.mode !== "active") {
-      return;
+    if (timerState.mode === "active") {
+      // use precise timer to uptick elapsed counter only on aligned second boundaries
+      const startMs = timerState.startMs; // local reference
+      const interval = setInterval(() => {
+        const elapsedSeconds = Math.floor((Date.now() - startMs) / 1000);
+        setElapsedCounter(elapsedSeconds);
+      }, 100);
+
+      return () => {
+        console.log("stopping");
+        clearInterval(interval);
+      };
     }
 
-    // use precise timer to uptick elapsed counter only on aligned second boundaries
-    const startMs = timerState.startMs; // local reference
-    const interval = setInterval(() => {
-      const elapsedSeconds = Math.floor((Date.now() - startMs) / 1000);
-      setElapsedCounter(elapsedSeconds);
-    }, 100);
+    if (timerState.mode === "stopped" && timerState.isDone) {
+      const finishMs = timerState.finishMs;
 
-    return () => {
-      console.log("stopping");
-      clearInterval(interval);
-    };
+      // track break time since workout finished
+      const interval = setInterval(() => {
+        const breakSeconds = Math.floor((Date.now() - finishMs) / 1000);
+        setElapsedCounter(breakSeconds);
+      }, 100);
+
+      return () => {
+        clearInterval(interval);
+      };
+    }
   }, [timerState]);
 
   function toggleTimer() {
@@ -103,8 +123,14 @@ const Timer: React.FC = () => {
 
   const seqRaw = useMemo(() => {
     if (timerState.mode === "stopped") {
+      if (timerState.isDone) {
+        return {
+          type: "done" as const,
+          breakTime: Math.floor((Date.now() - timerState.finishMs) / 1000),
+        };
+      }
       return {
-        type: timerState.isDone ? ("done" as const) : ("inactive" as const),
+        type: "inactive" as const,
       };
     }
 
@@ -123,15 +149,14 @@ const Timer: React.FC = () => {
     }
 
     const cycleTime = secondsDiff - preDelay;
-    const cycleIndex = Math.floor(cycleTime / (cycleWork + cycleRest));
-    if (cycleIndex >= cycleCount) {
-      return {
-        type: "done" as const,
-      };
-    }
+    const cycleLength = cycleWork + cycleRest;
+    const cycleIndex = Math.min(
+      Math.floor(cycleTime / cycleLength),
+      cycleCount - 1,
+    );
 
-    const cycleStart = cycleIndex * (cycleWork + cycleRest);
-    const cycleElapsed = cycleTime - cycleStart;
+    const cycleStart = cycleIndex * cycleLength;
+    const cycleElapsed = Math.min(cycleTime - cycleStart, cycleLength);
 
     if (cycleElapsed < cycleWork) {
       return {
@@ -140,13 +165,6 @@ const Timer: React.FC = () => {
         cycleIndex,
         timeElapsed: cycleElapsed,
         timeLeft: cycleWork - cycleElapsed,
-      };
-    }
-
-    if (cycleIndex === cycleCount - 1) {
-      // last cycle's rest is already done
-      return {
-        type: "done" as const,
       };
     }
 
@@ -205,6 +223,23 @@ const Timer: React.FC = () => {
     }
 
     if (seq.type === "rest") {
+      // last cycle's rest triggers done
+      if (seq.cycleIndex === cycleCount - 1) {
+        console.log("done");
+        samples.finishLine.play();
+        samples.done.play();
+
+        setCurrentVideoIndex((prev) => (prev + 1) % videoList.length);
+
+        // @todo this more reliably
+        setTimerState({
+          mode: "stopped",
+          isDone: true,
+          finishMs: Date.now(),
+        });
+        return;
+      }
+
       if (seq.timeElapsed === 0) {
         console.log("rest start", seq.cycleIndex);
         if (seq.cycleIndex === cycleCount - 2) {
@@ -224,36 +259,6 @@ const Timer: React.FC = () => {
         countSamples[seq.timeLeft - 1].play();
       }
 
-      return;
-    }
-
-    if (seq.type === "done") {
-      console.log("done");
-      samples.finishLine.play();
-      samples.done.play();
-
-      setCurrentVideoIndex((prev) => (prev + 1) % videoList.length);
-
-      // @todo this more reliably
-      setTimerState({
-        mode: "stopped",
-        isDone: true,
-      });
-      return;
-    }
-  }, [seq]);
-
-  // auto-stop the running timer when finished
-  useEffect(() => {
-    if (seq.type === "done") {
-      setTimerState((prev) =>
-        prev.mode === "stopped"
-          ? prev
-          : {
-              mode: "stopped",
-              isDone: true,
-            },
-      );
       return;
     }
   }, [seq]);
@@ -299,7 +304,12 @@ const Timer: React.FC = () => {
 
         {seq.type === "rest" && <div>{-seq.timeLeft}</div>}
 
-        {seq.type === "done" && <div>Done!</div>}
+        {seq.type === "done" && (
+          <div>
+            {("0" + Math.floor((seq.breakTime || 0) / 60)).slice(-2)}:
+            {("0" + ((seq.breakTime || 0) % 60)).slice(-2)}
+          </div>
+        )}
       </div>
 
       <div
