@@ -13,6 +13,9 @@ const videos: [string, number, string][] = [
   ["ZguPdN1L7vg", 15, "Block Rockin' Beats"],
   ["ltdhuNmfWuU", 65, "Ed Solo & Deekline - Bam Bam"],
   ["gdZK482P31s", 78, "Pendulum - Hold Your Colour (Noisia Remix)"],
+  ["5wnp_hRoghY", 15, "Max Graef - No 5"],
+  ["w23bl_6jdwg", 11, "Tsuruda - q-edits #2"],
+  ["jCc-Z1JhiUw", 44, "Blood Moon"],
 ];
 
 export function useVideoList() {
